@@ -1,6 +1,9 @@
 services:
   filesync:
-    image: poliuscorp/filesync
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    image: filesync:local
     container_name: filesync-app
     environment:
       - SECRET_KEY=<SECRET_KEY>

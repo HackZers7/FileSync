@@ -4,11 +4,10 @@ import { File } from './file.js';
 
 export class User {
   _name = this._generate_name();
-  _password = '';
   _peer = null;
   _remotePeers = {};
   _room_id;
-  _isHost;
+  _isHost = null;
   _files = {};
   _status;
   _downloadAll;
@@ -17,7 +16,6 @@ export class User {
 
   constructor(room_id) {
     this._room_id = room_id;
-    this._isHost = room_id.length == 0;
   }
 
   get id() {
@@ -28,10 +26,6 @@ export class User {
     return this._name
   }
 
-  get password() {
-    return this._password
-  }
-
   get isHost() {
     return this._isHost
   }
@@ -40,23 +34,7 @@ export class User {
     return this._files
   }
 
-  set password(value) {
-    this._password = value
-  }
-
-  async _hashPassword(password) {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(password);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    return hashHex;
-  }
-
-  async init(peer_id = null) {
-    // Get UUID
-    if (peer_id == null) peer_id = await this._getUUID();
-
+  async init() {
     // Get ICE servers
     let iceServers;
     try {
@@ -70,10 +48,33 @@ export class User {
       return
     }
 
-    await new Promise((resolve) => {
-      // Create a new Peer instance
+    // Try to register as the host of the shared room.
+    // If the fixed ID is already taken, fall back to peer mode.
+    const hostSuccess = await this._registerPeer(this._room_id, iceServers);
+    if (hostSuccess) {
+      this._isHost = true;
+      return;
+    }
+
+    // Peer mode: register with a fresh UUID, then connect to the host.
+    this._isHost = false;
+    const peerId = await this._getUUID();
+    const peerSuccess = await this._registerPeer(peerId, iceServers);
+    if (!peerSuccess) {
+      this._showFatalError('Could not register with the signaling server. Please refresh the page.');
+      return;
+    }
+
+    await this.connect(this._room_id);
+  }
+
+  // Attempts to open a Peer connection with the given ID.
+  // Resolves to `true` on success, `false` if the ID is already taken
+  // (so the caller can fall back to peer mode).
+  _registerPeer(peerId, iceServers) {
+    return new Promise((resolve) => {
       const isSecure = window.location.protocol === 'https:';
-      this._peer = new Peer(peer_id, {
+      this._peer = new Peer(peerId, {
         host: window.location.hostname,
         port: parseInt(window.location.port) || (isSecure ? 443 : 80),
         path: "/peerjs",
@@ -84,25 +85,41 @@ export class User {
         }
       });
 
-      // Emitted when a connection to the PeerServer is established.
+      let settled = false;
+
       this._peer.on('open', () => {
+        if (settled) return;
+        settled = true;
         this._reconnectAttempts = 0;
         if (this._reconnectTimer) {
           clearTimeout(this._reconnectTimer);
           this._reconnectTimer = null;
         }
-        this._handleOpen(resolve);
+        // Wire long-lived handlers for the lifetime of this peer.
+        this._peer.on('connection', (conn) => conn.on('open', () => this._handleConnection(conn)));
+        this._peer.on('disconnected', () => this._handleDisconnected());
+        resolve(true);
       });
 
-      // Emitted when a new data connection is established from a remote peer.
-      this._peer.on('connection', (conn) => conn.on('open', () => this._handleConnection(conn)));
-
-      // Emitted when the peer is disconnected from the signaling server.
-      this._peer.on('disconnected', () => this._handleDisconnected());
-
-      // Errors on the peer are almost always fatal and will destroy the peer.
-      this._peer.on('error', (err) => this._handleError(err));
-    })
+      // Error handler used during registration. After we settle, errors are
+      // routed to the normal handler via the second listener below.
+      this._peer.on('error', (err) => {
+        if (settled) {
+          this._handleError(err);
+          return;
+        }
+        if (err.type === 'unavailable-id') {
+          // The fixed room ID is already taken: someone else is the host.
+          settled = true;
+          try { this._peer.destroy(); } catch (e) {}
+          resolve(false);
+        } else {
+          settled = true;
+          this._handleError(err);
+          resolve(false);
+        }
+      });
+    });
   }
 
   async connect(peer_id) {
@@ -122,7 +139,7 @@ export class User {
     }
   }
 
-  // Emitted when a connection to the PeerServer is established. 
+  // Emitted when a connection to the PeerServer is established.
   _handleOpen(resolve) {
     resolve()
   }
@@ -572,14 +589,8 @@ export class User {
       // Store Host Peer connection
       this._remotePeers[conn.peer] = {"conn": conn, "interval": setInterval(() => this._isAlive(conn.peer), 1000)}
 
-      // Send credentials to the host to authenticate
-      if (!this._password) {
-        conn.send({"webrtc-connect": {"name": this._name}})
-      }
-      else {
-        const hashedPassword = await this._hashPassword(this._password);
-        conn.send({"webrtc-connect": {"name": this._name, "password": hashedPassword}})
-      }
+      // Send our identity to the host
+      conn.send({"webrtc-connect": {"name": this._name}})
     }
 
     // Resolve promise for .connect() method (a peer connects to the host)
@@ -591,57 +602,33 @@ export class User {
     // console.log("Received data from", conn.peer, data)
 
     if ('webrtc-connect' in data && this._isHost) {
-      if (this._password.length != 0 && !('password' in data['webrtc-connect'])) {
-        conn.send({'webrtc-connect-response': {"status": "password_required"}})
-      }
-      else if (this._password.length != 0 && await this._hashPassword(this._password) != data['webrtc-connect']['password']) {
-        conn.send({'webrtc-connect-response': {"status": "password_invalid"}})
-      }
-      else {
-        // Add peer to the peers list
-        this._remotePeers[conn.peer] = {"name": data['webrtc-connect']['name'], "conn": conn,  "interval": setInterval(() => this._isAlive(conn.peer), 1000)}
+      // Add peer to the peers list
+      this._remotePeers[conn.peer] = {"name": data['webrtc-connect']['name'], "conn": conn,  "interval": setInterval(() => this._isAlive(conn.peer), 1000)}
 
-        // Show peer connected status
-        dom.transfer_status_wait.style.display = 'none'
-        dom.transfer_status_success.style.display = 'inline-block'
+      // Show peer connected status
+      dom.transfer_status_wait.style.display = 'none'
+      dom.transfer_status_success.style.display = 'inline-block'
 
-        // Define peers list (including host user)
-        const peers_list = [{"id": this._peer.id, "name": this._name }, ...Object.entries(this._remotePeers).map(([k, v]) => ({"id": k, "name": v.name}))];
+      // Define peers list (including host user)
+      const peers_list = [{"id": this._peer.id, "name": this._name }, ...Object.entries(this._remotePeers).map(([k, v]) => ({"id": k, "name": v.name}))];
 
-        // Build user's list
-        this._addUserUI({"id": conn.peer, "name": data['webrtc-connect']['name']})
+      // Build user's list
+      this._addUserUI({"id": conn.peer, "name": data['webrtc-connect']['name']})
 
-        // Send confirmation
-        conn.send({'webrtc-connect-response': {"status": "welcome", "secured": this._password.trim().length != 0}})
+      // Send confirmation
+      conn.send({'webrtc-connect-response': {"status": "welcome"}})
 
-        // Notify all peers
-        for (let p of Object.values(this._remotePeers)) {
-          p.conn.send({'webrtc-peers': peers_list, 'webrtc-files': Object.values(this._files).filter(x => !x.aborted && !x.removed).map(x => x.file)})
-        }
+      // Notify all peers
+      for (let p of Object.values(this._remotePeers)) {
+        p.conn.send({'webrtc-peers': peers_list, 'webrtc-files': Object.values(this._files).filter(x => !x.aborted && !x.removed).map(x => x.file)})
       }
     }
     else if ('webrtc-connect-response' in data && !this._isHost) {
       this._status = data['webrtc-connect-response']
-      if (data['webrtc-connect-response'].status == 'password_required') {
-        dom.connect_div.style.display = 'none'
-        dom.password_div.style.display = 'block'
-        dom.password_input.focus()
-        conn.close()
-      }
-      else if (data['webrtc-connect-response'].status == 'password_invalid') {
-        dom.password_error.style.display = 'block'
-        dom.password_input.value = ''
-        dom.password_input.focus()
-        dom.password_submit.removeAttribute("disabled")
-        dom.password_loading.style.display = 'none'
-        conn.close()
-      }
-      else if (data['webrtc-connect-response'].status == 'welcome') {
+      if (data['webrtc-connect-response'].status == 'welcome') {
         // Update UI Components
         dom.connect_div.style.display = 'none'
-        dom.password_div.style.display = 'none'
         dom.transfer_div.style.display = 'block';
-        dom.transfer_status_protected.style.display = data['webrtc-connect-response'].secured ? 'inline-block' : 'none'
       }
     }
     else if ('webrtc-user-name' in data && this._isHost) {

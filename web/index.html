@@ -82,56 +82,12 @@
           <span style="color: var(--color-p); font-size:16px; font-weight:600">Connecting ...</span>
         </div>
 
-        <!-- PASSWORD REQUIRED -->
-        <div id="password-div" class="p-4 box" style="margin-top:40px; display: none; max-width: 600px; margin-left:auto; margin-right:auto; text-align: left;">
-          <div id="password-alert" class="alert alert-danger alert-dismissible" role="alert" style="display: none;">
-            <div style="text-align:left">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-exclamation-triangle-fill" viewBox="0 0 16 16" style="margin-bottom:3px; margin-right:5px">
-                <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5m.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/>
-              </svg>
-              This password is not valid.
-            </div>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-          </div>
-          <p>This room is protected with password.</p>
-          <div class="input-group mb-1">
-            <input id="password-input" class="form-control" type="password" placeholder="Enter a password" autocomplete="off" onkeypress="if (event.key === 'Enter' || event.key === 'NumpadEnter') { connectWithPassword() }" style="border-top-right-radius:0!important; border-bottom-right-radius:0!important">
-            <button onclick="togglePasswordVisibility('password-input','password-show','password-hide')" class="btn" type="button" style="background-color: #212529; color:#fff; border-color: rgb(86, 92, 110); margin-left:-1px; border-top-left-radius: 0; border-bottom-left-radius: 0">
-              <svg id="password-hide" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-eye-slash-fill" viewBox="0 0 16 16" style="margin-bottom:0px!important; display:block;">
-                <path d="m10.79 12.912-1.614-1.615a3.5 3.5 0 0 1-4.474-4.474l-2.06-2.06C.938 6.278 0 8 0 8s3 5.5 8 5.5a7.029 7.029 0 0 0 2.79-.588zM5.21 3.088A7.028 7.028 0 0 1 8 2.5c5 0 8 5.5 8 5.5s-.939 1.721-2.641 3.238l-2.062-2.062a3.5 3.5 0 0 0-4.474-4.474L5.21 3.089z"/>
-                <path d="M5.525 7.646a2.5 2.5 0 0 0 2.829 2.829l-2.83-2.829zm4.95.708-2.829-2.83a2.5 2.5 0 0 1 2.829 2.829zm3.171 6-12-12 .708-.708 12 12-.708.708z"/>
-              </svg>
-              <svg id="password-show" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-eye-fill" viewBox="0 0 16 16" style="margin-bottom:0px!important; display:none">
-                <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/>
-                <path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8zm8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/>
-              </svg>
-            </button>
-          </div>
-          <div id="password-error" style="color: #dc3545; font-size: 0.9rem; font-weight: 300; display: none;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-exclamation-circle-fill" viewBox="0 0 16 16" style="margin-right: 5px; margin-bottom:3px">
-              <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M8 4a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 4m.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2"/>
-            </svg>
-            This password is not valid.
-          </div>
-          <button id="password-submit" onclick="connectWithPassword()" class="btn btn-primary" type="button" style="height:40px; width:100%; font-size: 1rem; border-radius: 5px; margin-top:15px">
-            <div id="password-loading" class="spinner-border" style="color: white; width: 0.9rem; height: 0.9rem; --bs-spinner-border-width: 0.1em; margin-bottom:1px; margin-right:5px; display: none;"></div>
-            Submit
-          </button>
-        </div>
+        <!-- PASSWORD REQUIRED (removed: single shared session, no password) -->
 
         <!-- TRANSFER DIV -->
         <div id="transfer-div" class="p-4 box" style="margin-top:30px; display: none;">
           <div class="row" style="text-align: left;">
-            <div class="col col-auto" style="margin-right:10px">
-              <canvas id="transfer-qr-code"></canvas>
-            </div>
             <div class="col-md" style="padding-top:15px">
-
-              <span id="transfer-status-protected" style="display: none" title="Protected with password">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="#198754" class="bi bi-shield-shaded" viewBox="0 0 16 16" style="margin-right:5px; margin-bottom:3px">
-                  <path fill-rule="evenodd" d="M8 14.933a1 1 0 0 0 .1-.025q.114-.034.294-.118c.24-.113.547-.29.893-.533a10.7 10.7 0 0 0 2.287-2.233c1.527-1.997 2.807-5.031 2.253-9.188a.48.48 0 0 0-.328-.39c-.651-.213-1.75-.56-2.837-.855C9.552 1.29 8.531 1.067 8 1.067zM5.072.56C6.157.265 7.31 0 8 0s1.843.265 2.928.56c1.11.3 2.229.655 2.887.87a1.54 1.54 0 0 1 1.044 1.262c.596 4.477-.787 7.795-2.465 9.99a11.8 11.8 0 0 1-2.517 2.453 7 7 0 0 1-1.048.625c-.28.132-.581.24-.829.24s-.548-.108-.829-.24a7 7 0 0 1-1.048-.625 11.8 11.8 0 0 1-2.517-2.453C1.928 10.487.545 7.169 1.141 2.692A1.54 1.54 0 0 1 2.185 1.43 63 63 0 0 1 5.072.56"/>
-                </svg>
-              </span>
 
               <span id="transfer-status-wait" style="color: var(--color-p); font-size:16px; font-weight:600; display: inline-block;">
                 <div class="spinner-border" style="color: #0d6efd; width: 1.1rem; height: 1.1rem; --bs-spinner-border-width: 0.1em; margin-bottom:-1px; margin-right:8px"></div>
@@ -145,22 +101,6 @@
                 Connection established!
               </span>
 
-              <p style="font-size:17px; margin-top:15px; margin-bottom:15px; font-weight:500">Share room link to devices you want to share files with.</p>
-
-              <div onclick="copyURL()" class="input-group flex-nowrap" style="margin-bottom: 5px; cursor: pointer;">
-                <span id="transfer-url-value" class="form-control" style="font-family: Consolas,monaco,monospace; font-size: 15px; padding-top:12px; padding-bottom:12px; text-decoration: none; word-wrap: break-word; color: var(--color-url)"></span>
-                <span id="transfer-url-copy" class="input-group-text" style="width: 48px; border-top-right-radius: 5px; border-bottom-right-radius: 5px;" title="Copy URL">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-copy" viewBox="0 0 16 16" style="margin-left:3px">
-                    <path fill-rule="evenodd" d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zM2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1z"/>
-                  </svg>
-                </span>
-                <span id="transfer-url-success" class="input-group-text" style="display: none; border-top-right-radius: 5px; border-bottom-right-radius: 5px;">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-check-lg" viewBox="0 0 16 16" style="margin-right: 2px;">
-                    <path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425z"/>
-                  </svg>
-                </span>
-              </div>
-
               <div class="row">
                 <div class="col-auto" style="padding-right:0; padding-top:15px">
                   <button id="transfer-select-file" class="btn btn-primary" type="button" onclick="document.getElementById('transfer-select-file-input').click()" style="height:50px; font-size: 1.05rem; border-radius: 100px;">
@@ -170,14 +110,6 @@
                     <span style="margin-right: 10px;">Send Files</span>
                   </button>
                   <input id="transfer-select-file-input" type="file" multiple onchange="sendFiles(this)" style="display: none"/>
-                </div>
-                <div id="transfer-add-password" class="col col-auto" style="padding-top:15px; display: none;">
-                  <button class="btn btn-success" type="button" onclick="addPassword()" style="height:50px; font-size: 1.05rem; border-radius: 100px">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" class="bi bi-shield-shaded" viewBox="0 0 16 16" style="margin-left:10px; margin-right:5px; margin-bottom:3px">
-                      <path fill-rule="evenodd" d="M8 14.933a1 1 0 0 0 .1-.025q.114-.034.294-.118c.24-.113.547-.29.893-.533a10.7 10.7 0 0 0 2.287-2.233c1.527-1.997 2.807-5.031 2.253-9.188a.48.48 0 0 0-.328-.39c-.651-.213-1.75-.56-2.837-.855C9.552 1.29 8.531 1.067 8 1.067zM5.072.56C6.157.265 7.31 0 8 0s1.843.265 2.928.56c1.11.3 2.229.655 2.887.87a1.54 1.54 0 0 1 1.044 1.262c.596 4.477-.787 7.795-2.465 9.99a11.8 11.8 0 0 1-2.517 2.453 7 7 0 0 1-1.048.625c-.28.132-.581.24-.829.24s-.548-.108-.829-.24a7 7 0 0 1-1.048-.625 11.8 11.8 0 0 1-2.517-2.453C1.928 10.487.545 7.169 1.141 2.692A1.54 1.54 0 0 1 2.185 1.43 63 63 0 0 1 5.072.56"/>
-                    </svg>
-                    <span style="margin-right: 10px;">Add password</span>
-                  </button>
                 </div>
               </div>
             </div>
@@ -238,45 +170,7 @@
           </div>
         </div>
 
-        <!-- ADD PASSWORD MODAL -->
-        <div id="password-modal" class="modal fade" tabindex="-1" style="text-align: left;">
-          <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h5 style="color: var(--color-h1); margin:0">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="#198754" class="bi bi-shield-shaded" viewBox="0 0 16 16" style="margin-right:5px; margin-bottom:4px">
-                    <path fill-rule="evenodd" d="M8 14.933a1 1 0 0 0 .1-.025q.114-.034.294-.118c.24-.113.547-.29.893-.533a10.7 10.7 0 0 0 2.287-2.233c1.527-1.997 2.807-5.031 2.253-9.188a.48.48 0 0 0-.328-.39c-.651-.213-1.75-.56-2.837-.855C9.552 1.29 8.531 1.067 8 1.067zM5.072.56C6.157.265 7.31 0 8 0s1.843.265 2.928.56c1.11.3 2.229.655 2.887.87a1.54 1.54 0 0 1 1.044 1.262c.596 4.477-.787 7.795-2.465 9.99a11.8 11.8 0 0 1-2.517 2.453 7 7 0 0 1-1.048.625c-.28.132-.581.24-.829.24s-.548-.108-.829-.24a7 7 0 0 1-1.048-.625 11.8 11.8 0 0 1-2.517-2.453C1.928 10.487.545 7.169 1.141 2.692A1.54 1.54 0 0 1 2.185 1.43 63 63 0 0 1 5.072.56"/>
-                  </svg>
-                  Add password
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-              </div>
-              <div class="modal-body">
-                <label class="mb-1" for="password">Password</label>
-                <div class="input-group mb-2">
-                  <input id="password-modal-value" class="form-control" type="password" placeholder="Enter a password" autocomplete="off" onkeypress="if (event.key === 'Enter' || event.key === 'NumpadEnter') { addPasswordSubmit() }" style="border-top-right-radius:0!important; border-bottom-right-radius:0!important">
-                  <button onclick="togglePasswordVisibility('password-modal-value','password-button-show','password-button-hide')" class="btn" type="button" style="background-color: #212529; color:#fff; border-color: rgb(86, 92, 110); margin-left:-1px; border-top-left-radius: 0; border-bottom-left-radius: 0">
-                    <svg id="password-button-hide" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-eye-slash-fill" viewBox="0 0 16 16" style="margin-bottom:0px!important; display:block;">
-                      <path d="m10.79 12.912-1.614-1.615a3.5 3.5 0 0 1-4.474-4.474l-2.06-2.06C.938 6.278 0 8 0 8s3 5.5 8 5.5a7.029 7.029 0 0 0 2.79-.588zM5.21 3.088A7.028 7.028 0 0 1 8 2.5c5 0 8 5.5 8 5.5s-.939 1.721-2.641 3.238l-2.062-2.062a3.5 3.5 0 0 0-4.474-4.474L5.21 3.089z"/>
-                      <path d="M5.525 7.646a2.5 2.5 0 0 0 2.829 2.829l-2.83-2.829zm4.95.708-2.829-2.83a2.5 2.5 0 0 1 2.829 2.829zm3.171 6-12-12 .708-.708 12 12-.708.708z"/>
-                    </svg>
-                    <svg id="password-button-show" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-eye-fill" viewBox="0 0 16 16" style="margin-bottom:0px!important; display:none">
-                      <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/>
-                      <path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8zm8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button onclick="addPasswordSubmit()" type="button" class="btn btn-primary">
-                  <span id="modalLoading" class="spinner-border spinner-border-sm" style="display:none; width:15px; height:15px; border-width:2px; margin-right:5px" aria-hidden="true"></span>
-                  Confirm
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <!-- ADD PASSWORD MODAL (removed: single shared session, no password) -->
 
         <!-- CHANGE NAME MODAL -->
         <div id="name-modal" class="modal fade" tabindex="-1" style="text-align: left;">
@@ -429,7 +323,6 @@
 
     <script src="js/vendors/bootstrap.bundle.min.js" type="text/javascript"></script>
     <script src="js/vendors/jszip.min.js" type="text/javascript"></script>
-    <script src="js/vendors/qrious.min.js" type="text/javascript"></script>
     <script src="js/vendors/peerjs.min.js" type="text/javascript"></script>
     <script type="module" src="js/modules/dom.js" type="text/javascript"></script>
     <script type="module" src="js/modules/script.js" type="text/javascript"></script>

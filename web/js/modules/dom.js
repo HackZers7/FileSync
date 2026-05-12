@@ -11,34 +11,17 @@ export const dom = {
   error_div: document.getElementById('error-div'),
   error_message: document.getElementById('error-message'),
 
-  // PASSWORD
-  password_div: document.getElementById('password-div'),
-  password_alert: document.getElementById('password-alert'),
-  password_input: document.getElementById('password-input'),
-  password_hide: document.getElementById('password-hide'),
-  password_show: document.getElementById('password-show'),
-  password_error: document.getElementById('password-error'),
-  password_submit: document.getElementById('password-submit'),
-  password_loading: document.getElementById('password-loading'),
-
   // CONNECT
   connect_div: document.getElementById('connect-div'),
 
   // TRANSFER
   transfer_div: document.getElementById('transfer-div'),
 
-  transfer_qr_code: document.getElementById('transfer-qr-code'),
-  transfer_status_protected: document.getElementById('transfer-status-protected'),
   transfer_status_wait: document.getElementById('transfer-status-wait'),
   transfer_status_success: document.getElementById('transfer-status-success'),
 
-  transfer_url_value: document.getElementById('transfer-url-value'),
-  transfer_url_copy: document.getElementById('transfer-url-copy'),
-  transfer_url_success: document.getElementById('transfer-url-success'),
-
   transfer_select_file: document.getElementById('transfer-select-file'),
   transfer_select_file_input: document.getElementById('transfer-select-file-input'),
-  transfer_add_password: document.getElementById('transfer-add-password'),
 
   transfer_users_div: document.getElementById('transfer-users-div'),
   transfer_users_count: document.getElementById('transfer-users-count'),
@@ -51,10 +34,6 @@ export const dom = {
   transfer_files_download: document.getElementById('transfer-files-download'),
   transfer_files_list: document.getElementById('transfer-files-list'),
   transfer_files_list_empty: document.getElementById('transfer-files-list-empty'),
-
-  // PASSWORD MODAL
-  password_modal: document.getElementById('password-modal'),
-  password_modal_value: document.getElementById('password-modal-value'),
 
   // NAME MODAL
   name_modal: document.getElementById('name-modal'),
@@ -84,11 +63,6 @@ export const dom = {
 // Display a confirmation dialog when the user attempts to refresh or navigate away from the page.
 window.addEventListener("beforeunload", (event) => {
   event.preventDefault();
-});
-
-// Focus the password input after the fade animation
-dom.password_modal.addEventListener('shown.bs.modal', () => {
-  dom.password_modal_value.focus()
 });
 
 // Focus the name input after the fade animation
