@@ -324,6 +324,15 @@
     <script src="js/vendors/bootstrap.bundle.min.js" type="text/javascript"></script>
     <script src="js/vendors/jszip.min.js" type="text/javascript"></script>
     <script src="js/vendors/peerjs.min.js" type="text/javascript"></script>
+    <script src="js/vendors/streamsaver.min.js" type="text/javascript"></script>
+    <script>
+      // Point StreamSaver to our same-origin mitm so the Service Worker is
+      // registered under our scope (avoids CORS / scope issues from the
+      // public CDN URL the library defaults to).
+      if (window.streamSaver) {
+        streamSaver.mitm = 'mitm.html';
+      }
+    </script>
     <script type="module" src="js/modules/dom.js" type="text/javascript"></script>
     <script type="module" src="js/modules/script.js" type="text/javascript"></script>
     <script type="module" src="js/modules/webrtc/user.js" type="text/javascript"></script>

@@ -1,0 +1,11 @@
+{
+	auto_https disable_redirects
+	local_certs
+	default_sni {$LOCAL_HOST}
+}
+
+{$LOCAL_HOST}, https:// {
+	tls internal
+	encode zstd gzip
+	reverse_proxy filesync:80
+}

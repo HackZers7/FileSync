@@ -493,6 +493,49 @@ textarea::-webkit-scrollbar-thumb {
   animation: fadeInUp 0.4s ease-out;
 }
 
+/* "Downloading…" label used by the streaming-to-disk receiver path.
+   We can't show a percentage there (StreamSaver hides total bytes), so we
+   give the label an animated shimmer + pulsing trailing dots instead. */
+@keyframes downloading-shimmer {
+  0%   { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+@keyframes downloading-dots {
+  0%, 20%  { opacity: 0; }
+  50%      { opacity: 1; }
+  80%, 100%{ opacity: 0; }
+}
+
+.downloading-anim {
+  font-weight: 600;
+  background: linear-gradient(
+    90deg,
+    var(--color-muted) 0%,
+    #0d6efd 50%,
+    var(--color-muted) 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: downloading-shimmer 1.6s linear infinite;
+}
+
+.downloading-anim::after {
+  content: '';
+  display: inline-block;
+  width: 0;
+}
+
+.file-progress-speed,
+.file-progress-bytes,
+.file-progress-pct {
+  font-variant-numeric: tabular-nums;
+}
+
+
 /* --- Scrollbar --- */
 
 ::-webkit-scrollbar {

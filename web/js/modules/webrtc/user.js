@@ -321,8 +321,43 @@ export class User {
     if (window.showToast) window.showToast(`File "${this._files[fileId].name}" removed.`)
   }
 
+  // Threshold below which we keep the legacy in-memory path (instant blob
+  // download, no Service Worker round-trip). Files at/above this size go
+  // through StreamSaver so the browser writes them straight to disk.
+  static IN_MEMORY_LIMIT = 100 * 1024 * 1024  // 100 MB
+
   // Download a file shared by another peer
   async downloadFile(fileId) {
+    const file = this._files[fileId]
+
+    // Decide mode based on file size:
+    //   - small files  → keep the original in-memory WebRTC path (chunks
+    //     accumulated, downloaded as a Blob at the end). Fast and works
+    //     in any browser, including plain HTTP.
+    //   - large files  → StreamSaver / Service Worker. Writes chunks to
+    //     disk on the fly so RAM never holds the full file. Requires a
+    //     secure context (https or localhost).
+    let writer = null
+    let streamMode = false
+
+    if (file.size >= User.IN_MEMORY_LIMIT) {
+      if (window.streamSaver && window.isSecureContext) {
+        try {
+          const stream = window.streamSaver.createWriteStream(file.name, { size: file.size })
+          writer = stream.getWriter()
+          streamMode = true
+        } catch (err) {
+          console.warn('StreamSaver failed, falling back to in-memory download:', err)
+        }
+      }
+      else {
+        console.warn('Streaming-to-disk requires a secure context (HTTPS or localhost). Falling back to in-memory download.')
+      }
+    }
+
+    file.writer = writer
+    file.streamMode = streamMode
+
     // Update UI: Remove Download button and add loading icon
     document.getElementById(`file-${fileId}-download`).style.display = 'none'
     document.getElementById(`file-${fileId}-error`).innerHTML = ''
@@ -331,7 +366,23 @@ export class User {
     document.getElementById(`file-${fileId}-icon-success`).style.display = 'none'
     document.getElementById(`file-${fileId}-icon-failed`).style.display = 'none'
     document.getElementById(`file-${fileId}-icon-loading`).style.display = 'block'
-    document.getElementById(`file-${fileId}-progress`).innerHTML = '0% | '
+
+    // Initialise the progress UI structure once. file.js updates the text
+    // content of the child spans on every chunk; reusing the same DOM nodes
+    // lets the CSS animation on the "Downloading…" label run uninterrupted.
+    const progress = document.getElementById(`file-${fileId}-progress`)
+    if (streamMode) {
+      progress.innerHTML =
+        '<span class="downloading-anim">Downloading…</span>' +
+        ' • <span class="file-progress-speed">— MB/s</span>' +
+        ' • <span class="file-progress-bytes">0 B</span> | '
+    }
+    else {
+      progress.innerHTML =
+        '<span class="file-progress-pct">0%</span>' +
+        ' • <span class="file-progress-speed">— MB/s</span>' +
+        ' • <span class="file-progress-bytes">0 B / ' + this._parseBytes(file.size) + '</span> | '
+    }
 
     // Init Peering connection to receive the file
     await this._files[fileId].init()
@@ -352,6 +403,9 @@ export class User {
     document.getElementById(`file-${fileId}-icon-failed`).style.display = 'none'
     document.getElementById(`file-${fileId}-error`).style.display = 'block'
     document.getElementById(`file-${fileId}-error`).innerHTML = 'You have stopped the file transfer.'
+    // Wipe the live progress line (Downloading… / speed / bytes).
+    const progressEl = document.getElementById(`file-${fileId}-progress`)
+    if (progressEl) progressEl.innerHTML = ''
   }
 
   // See file details

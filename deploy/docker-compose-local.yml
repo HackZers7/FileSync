@@ -1,0 +1,55 @@
+services:
+  caddy:
+    image: caddy
+    container_name: filesync-caddy
+    ports:
+      - "443:443"
+    environment:
+      # The hostname / IP browsers will use. Must match what users type in
+      # the URL bar, otherwise the self-signed cert won't validate.
+      - LOCAL_HOST=<LOCAL_API>
+    volumes:
+      - ./Caddyfile.local:/etc/caddy/Caddyfile:ro
+      - filesync-caddy-data:/data
+      - filesync-caddy-config:/config
+    depends_on:
+      - filesync
+    restart: unless-stopped
+
+  filesync:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    image: filesync:local
+    container_name: filesync-app
+    environment:
+      - SECRET_KEY=<SECRET_KEY>
+    depends_on:
+      - peerjs
+    restart: unless-stopped
+
+  peerjs:
+    image: peerjs/peerjs-server:1.1.0-rc.2
+    container_name: filesync-peerjs
+    command: peerjs --path /peerjs
+    depends_on:
+      - coturn
+    restart: unless-stopped
+
+  coturn:
+    image: coturn/coturn:alpine
+    container_name: filesync-coturn
+    command:
+      - --fingerprint
+      - --use-auth-secret
+      - --no-multicast-peers
+      - --realm=filesync.app.local
+      - --static-auth-secret=<SECRET_KEY>
+    ports:
+      - "3478:3478/tcp"
+      - "3478:3478/udp"
+    restart: unless-stopped
+
+volumes:
+  filesync-caddy-data:
+  filesync-caddy-config:
