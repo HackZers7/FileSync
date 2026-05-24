@@ -202,8 +202,17 @@ export class File {
     await this.init(peer_id)
 
     // Establish a connection with the target peer.
+    //
+    // CRITICAL: pass { reliable: true } so PeerJS opens the underlying
+    // RTCDataChannel with { ordered: true } (and without maxRetransmits=0).
+    // PeerJS defaults to reliable=false, which gives an UNORDERED, UNRELIABLE
+    // SCTP channel — chunks of different conn.send() messages can arrive
+    // out of order or be silently dropped. For small files this rarely
+    // shows; for big files it surfaces as "size matches, content corrupted"
+    // (the receiver still counts every chunk, but bytes land in the wrong
+    // place on disk → 7z/zip integrity errors).
     await new Promise((resolve) => {
-      const conn = this._remotePeers[peer_id].peer.connect(peer_id);
+      const conn = this._remotePeers[peer_id].peer.connect(peer_id, { reliable: true });
 
       // Emitted when the connection is established and ready-to-use.
       conn.on('open', () => this._handleConnection(conn, resolve));
